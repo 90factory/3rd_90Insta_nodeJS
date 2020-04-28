@@ -56,7 +56,6 @@ router.use('/*', function(req, res, next) {
 
 //메인 페이지
 router.get('/', function(req, res, next) {
-  var user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id
 
   models.Post.findAll({
     include: [{
@@ -99,7 +98,7 @@ router.get('/', function(req, res, next) {
   })
   .catch( err => {
     var data = {message: '피드 조회에 실패했습니다.'};
-    return res.status(200).send(JSON.stringify(data));
+    return res.status(404).send(JSON.stringify(data));
   })
 });
 
