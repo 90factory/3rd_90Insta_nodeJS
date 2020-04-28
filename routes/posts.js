@@ -56,7 +56,6 @@ router.use('/*', function(req, res, next) {
 
 //메인 페이지
 router.get('/', function(req, res, next) {
-  var user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id
 
   models.Post.findAll({
     include: [{
