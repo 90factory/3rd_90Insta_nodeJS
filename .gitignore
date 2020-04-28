@@ -112,3 +112,4 @@ dist
 .vscode/
 bin/
 config/
+package-lock.json

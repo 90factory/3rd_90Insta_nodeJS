@@ -53,7 +53,7 @@ router.use('/*', function(req, res, next) {
 })
 
 
-//메인 페이지-구현
+//메인 페이지
 router.get('/', function(req, res, next) {
 
   models.Post.findAll({
@@ -100,6 +100,10 @@ router.get('/', function(req, res, next) {
     return res.status(200).send(JSON.stringify(data));
   })
 });
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2ff2a51ebe8974db7ee18bf52220ca320a6d42c9
 
 //내 계정 페이지
 router.get('/myfeed', function(req, res, next) {
@@ -137,6 +141,7 @@ router.get('/myfeed', function(req, res, next) {
   });
 
 });
+
 
 //타 계정 페이지
 router.get('/yourfeed/:id', function(req, res, next) {
@@ -179,7 +184,7 @@ router.get('/yourfeed/:id', function(req, res, next) {
 });
 
 
-//피드 작성 페이지(POST)-구현
+//피드 작성 페이지(POST)
 router.post('/', upload.array('imgFile', 3), function(req, res, next) {
   let post_id = '';
   let body = req.body;
@@ -215,7 +220,7 @@ router.post('/', upload.array('imgFile', 3), function(req, res, next) {
 });
 
 
-//개별 게시물 페이지-구현
+//개별 게시물 페이지
 router.get('/:id', function(req, res, next) {
   let post_id = req.params.id;
   models.Post.findOne({
@@ -247,7 +252,32 @@ router.get('/:id', function(req, res, next) {
 });
 
 
+<<<<<<< HEAD
 //피드 삭제(DELETE)-구현
+=======
+//피드 수정(PUT)
+router.put('/', function(req, res, next) {
+  let post_id = req.params.id;
+  let body = req.body;
+  models.Post.update({
+    text: body.postText
+  }, {
+    where: { id: post_id }
+  })
+
+  .then( result => {
+    res.send(JSON.stringify(result));
+    console.log(result);
+  })
+  .catch( err => {
+    res.status(400).send('피드 수정에 실패했습니다.');
+    console.log('데이터 수정 실패');
+  })
+});
+
+
+//피드 삭제(DELETE)
+>>>>>>> 2ff2a51ebe8974db7ee18bf52220ca320a6d42c9
 router.delete('/', function(req, res, next) {
   let user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id;
   let post_id = req.body.post_id;
@@ -260,11 +290,16 @@ router.delete('/', function(req, res, next) {
 
   .then( result => {
     if (result.post_author_id != user_id) {
+<<<<<<< HEAD
       let data = {message: '피드 작성자만 삭제할 수 있습니다.'};
       return res.status(400).send(JSON.stringify(data));
+=======
+      return res.status(400).send('피드 작성자만 삭제할 수 있습니다.');
+   
+>>>>>>> 2ff2a51ebe8974db7ee18bf52220ca320a6d42c9
     } else {
       let post_id = result.id;
-
+     
       models.Photo.findAll({
         where: {
           post_id: post_id
