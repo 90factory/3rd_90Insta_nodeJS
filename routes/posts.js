@@ -5,9 +5,6 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const ip = require('ip');
 
-// const moment = require('moment');
-//const validator = require('validator');
-
 const models = require('../models/index.js');
 const env = process.env.NODE_ENV || 'jwt_config';
 const config = require('../config/config.json')[env];
@@ -27,7 +24,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage : storage,
   fileFilter : function (req, file, callback) {
-    var ext = path.extname(file.originalname);
+    let ext = path.extname(file.originalname);
     if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
       return callback(new Error('이미지만 첨부할 수 있습니다.'))
     }
@@ -38,15 +35,17 @@ const upload = multer({
 
 //jwt 검증 미들웨어
 router.use('/*', function(req, res, next) {
-  const req_token = req.headers.authorization;
+  let req_token = req.headers.authorization;
   if (!req_token) {
-    return res.status(401).send('로그인이 필요합니다.');
-  } else { 
+    let data = {message: '로그인이 필요합니다.'};
+    return res.status(401).send(JSON.stringify(data));
+} else { 
       try {
-        var decoded = jwt.verify(req_token, config.secretKey);
+        let decoded = jwt.verify(req_token, config.secretKey);
         console.log('token : ', decoded); //id: 사용자 id(users 테이블 pk), exp: 만료시간
     } catch (err) {
-        return res.status(401).send('로그인이 필요합니다.');
+        let data = {message: '로그인이 필요합니다.'};
+        return res.status(401).send(JSON.stringify(data));
     }
   }
   res.decoded = decoded;
@@ -56,7 +55,6 @@ router.use('/*', function(req, res, next) {
 
 //메인 페이지-구현
 router.get('/', function(req, res, next) {
-  var user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id
 
   models.Post.findAll({
     include: [{
@@ -87,7 +85,6 @@ router.get('/', function(req, res, next) {
 
   .then( result => {
     const url = 'http://' + ip.address() + ':3000/'
-    // post = JSON.stringify(result);
     function replacer(key, value) {
       if ( key == 'photo') {
         const imgUrl = url+value;
@@ -99,34 +96,14 @@ router.get('/', function(req, res, next) {
     return res.status(200).send(JSON.stringify(result, replacer));
   })
   .catch( err => {
-    var data = {message: '피드 조회에 실패했습니다.'};
+    let data = {message: '피드 조회에 실패했습니다.'};
     return res.status(200).send(JSON.stringify(data));
   })
 });
-    //메인페이지 부가코드
-    // .then( result => {
-    //   console.log('!!!')
-
-    //   // models.User.findOne({
-      //   where: {id: user_id},
-      //   attributes: ['nickname']
-      // })
-
-  //  .then ( result => {
-  //   user = JSON.stringify(result)
-
-
-    // console.log('user: ', user, 'post: ', post);
-
-  // })
-
-  //})
-
-
 
 //내 계정 페이지
 router.get('/myfeed', function(req, res, next) {
-  var user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id
+  let user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id
 
   models.User.findOne({ 
     where: { id: user_id },
@@ -155,7 +132,7 @@ router.get('/myfeed', function(req, res, next) {
     return res.status(200).send(JSON.stringify(result, replacer));
     })
   .catch( err => {
-    var data = {message: '피드 조회에 실패했습니다.'};
+    let data = {message: '피드 조회에 실패했습니다.'};
     return res.status(404).send(JSON.stringify(data));
   });
 
@@ -163,7 +140,7 @@ router.get('/myfeed', function(req, res, next) {
 
 //타 계정 페이지
 router.get('/yourfeed/:id', function(req, res, next) {
-  var user_id = req.params.id;
+  let user_id = req.params.id;
   
   models.User.findOne({
     where: { id: user_id },
@@ -182,7 +159,6 @@ router.get('/yourfeed/:id', function(req, res, next) {
       }]
   })
   .then( result => {
-    // var data = {}
     const url = 'http://' + ip.address() + ':3000/'
     function replacer(key, value) {
       if ( key == 'photo' ) {
@@ -192,15 +168,11 @@ router.get('/yourfeed/:id', function(req, res, next) {
         }
         return value
       }
-      
-      // data.user_id = user_id
-      // data.result = result 
-
       return res.status(200).send(JSON.stringify(result, replacer));
     })
 
   .catch( err => {
-    var data = {message: '피드 조회에 실패했습니다.'};
+    let data = {message: '피드 조회에 실패했습니다.'};
     return res.status(404).send(JSON.stringify(data));
   });
 
@@ -215,7 +187,8 @@ router.post('/', upload.array('imgFile', 3), function(req, res, next) {
   let user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id;
 
   if (files.length == 0){
-    return res.status(400).send('사진이 첨부되지 않았습니다.');
+    let data = {message: '사진이 첨부되지 않았습니다'};
+    return res.status(400).send(JSON.stringify(data));
   }
   models.Post.create({
     text: body.postText,
@@ -225,19 +198,18 @@ router.post('/', upload.array('imgFile', 3), function(req, res, next) {
   .then( result => {
     console.log('이미지 파일 정보: ', files);
     post_id = result.id;
-    var a = files[0].path.replace(/\\/g, '/'); //여러장 첨부시 반복문 처리 필요함
+    let a = files[0].path.replace(/\\/g, '/'); //여러장 첨부시 반복문 처리 필요함
     for( i = 0; i < files.length; i++ ) {
       models.Photo.create({
         photo: a.replace('public/', ''),
         post_id: post_id
       })
     }
-    var data = {message: '피드가 등록되었습니다.'};
+    let data = {message: '피드가 등록되었습니다.'};
     return res.status(200).send(JSON.stringify(data));
   })
   .catch( err => {
-    //console.error(err);
-    var data = {message: '피드 등록에 실패했습니다.'};
+    let data = {message: '피드 등록에 실패했습니다.'};
     return res.status(404).send(JSON.stringify(data));
   })
 });
@@ -269,38 +241,15 @@ router.get('/:id', function(req, res, next) {
     return res.status(200).send(JSON.stringify(result));
   })
   .catch( err => {
-    var data = {message: '피드 조회에 실패했습니다.'};
+    let data = {message: '피드 조회에 실패했습니다.'};
     return res.status(404).send(JSON.stringify(data));
   });
 });
 
 
-// //피드 수정(PUT)-미구현
-// router.put('/', function(req, res, next) {
-//   let post_id = req.params.id;
-//   let body = req.body;
-//   models.Post.update({
-//     text: body.postText
-//   }, {
-//     where: { id: post_id }
-//   })
-
-//   .then( result => {
-//     res.send(JSON.stringify(result));
-//     console.log(result);
-//   })
-//   .catch( err => {
-//     res.status(400).send('피드 수정에 실패했습니다.');
-//     console.log('데이터 수정 실패');
-//   })
-// });
-
-
 //피드 삭제(DELETE)-구현
 router.delete('/', function(req, res, next) {
-
   let user_id = req.connection._httpMessage.req.connection._httpMessage.decoded.id;
-
   let post_id = req.body.post_id;
 
   models.Post.findOne({
@@ -310,11 +259,10 @@ router.delete('/', function(req, res, next) {
   })
 
   .then( result => {
-
     if (result.post_author_id != user_id) {
-      return res.status(400).send('피드 작성자만 삭제할 수 있습니다.');
+      let data = {message: '피드 작성자만 삭제할 수 있습니다.'};
+      return res.status(400).send(JSON.stringify(data));
     } else {
-
       let post_id = result.id;
 
       models.Photo.findAll({
@@ -329,14 +277,15 @@ router.delete('/', function(req, res, next) {
   .then( result => {
 
     if (JSON.stringify(result).length == 0) {
-      return res.status(404).send('피드가 존재하지 않습니다.');
+      let data = {message: '피드가 존재하지 않습니다.'};
+      return res.status(404).send(JSON.stringify(data));      
     }else {
       for ( i = 0; i < result.length; i++) {
         console.log(result[i].photo);
-        var file = result[i].photo;
+        let file = result[i].photo;
         fs.unlink('./public/' + file, function (err) {
           if (err) throw err;
-          console.log('imgFile deleted!');
+          console.log('이미지 파일을 삭제했습니다.');
         })
       }
     }
@@ -352,11 +301,11 @@ router.delete('/', function(req, res, next) {
   })
     
   .then( result => {
-    var data = {message: '피드가 삭제되었습니다.'};
+    let data = {message: '피드가 삭제되었습니다.'};
     return res.status(201).send(JSON.stringify(data));
   })
   .catch( err => {
-    var data = {message: '피드 삭제에 실패했습니다.'};
+    let data = {message: '피드 삭제에 실패했습니다.'};
     return res.status(400).send(JSON.stringify(data));
   });
 });
